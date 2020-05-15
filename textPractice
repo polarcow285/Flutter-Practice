@@ -41,7 +41,7 @@ class _MyCustomFormState extends State<MyCustomForm> {
       myController.text = "no se";
     }
   }
-  Widget translateButton(BuildContext context){
+  Widget translateButton(){
     return Container(
       margin: EdgeInsets.all(5),
       child: FlatButton(
@@ -92,7 +92,8 @@ class _MyCustomFormState extends State<MyCustomForm> {
              child: TextField(
                controller: secondController,)
            ),
-            translateButton(context),
+            translateButton(),
+            nextScreenButton(context),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -112,6 +113,80 @@ class _MyCustomFormState extends State<MyCustomForm> {
         },
         tooltip: 'Show me the value!',
         child: Icon(Icons.text_fields),
+      ),
+    );
+  }
+}
+Widget nextScreenButton(BuildContext context){
+  return Container(
+      margin: EdgeInsets.all(5),
+      child: FlatButton(
+        child: Text('Screen'),
+        color: Colors.yellow,
+        textColor: Colors.blue,
+        onPressed:(){
+          Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SecondRoute()),
+            );
+        }
+      ),
+  );
+}
+class SecondRoute extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Sreen #2"),
+      ),
+      body: Column(
+        children: [
+          Container(
+            margin: EdgeInsets.all(5),
+            child: FlatButton(
+              child: Text('Screen'),
+              color: Colors.yellow,
+              textColor: Colors.blue,
+              onPressed:(){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ThirdScreen()),
+                );
+              }
+            ) 
+          ),
+          Container(
+            margin: EdgeInsets.all(5),
+            child: FlatButton( 
+              child: Text('Go back'),
+              color: Colors.yellow,
+              textColor: Colors.blue,
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            )
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class ThirdScreen extends StatelessWidget{
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Sreen #4"),
+      ),
+      body: Center(
+        child: RaisedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text('Go back!'),
+        ),
       ),
     );
   }
