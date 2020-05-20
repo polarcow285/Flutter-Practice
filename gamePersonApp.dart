@@ -51,10 +51,9 @@ class _MyAppState extends State<MyCustomApp> {
           incrementButton(),
           Text('$number'),
           decrementButton(),
-  
         ],
-    )
-  );
+      )
+    );
   } 
 
   Widget displayNumber(int label, int number) {
@@ -150,11 +149,11 @@ class _PlayerNamesScreenState extends State<PlayerNamesScreen> {
     myController.dispose();
     super.dispose();
   }
+  int integer = 3;
+  String stuff = "";
   @override
  
   Widget build(BuildContext context) {
-     String text = myController.text;
-     String text2 = "";
     return Scaffold(
       appBar: AppBar(
         title: Text("Enter Player Names"),
@@ -168,8 +167,6 @@ class _PlayerNamesScreenState extends State<PlayerNamesScreen> {
               controller: myController,
             ),
             ),
-          Text(text),
-          Text(text2),
           Container(
             margin: EdgeInsets.all(5),
             child: FlatButton(
@@ -178,9 +175,11 @@ class _PlayerNamesScreenState extends State<PlayerNamesScreen> {
               textColor: Colors.blue,
               onPressed:(){
                 setState(() {
-                  text = myController.text;
                   onePlayerGame(myController.text);
-                  text2 = personList[0].eyecolor;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ArmyInfoScreen()),
+                    );
                 });
               }
             ) 
@@ -200,7 +199,6 @@ class _PlayerNamesScreenState extends State<PlayerNamesScreen> {
       ),
     );
   }
-}
 
 void onePlayerGame(String playerName){
     
@@ -220,7 +218,151 @@ void onePlayerGame(String playerName){
     String weapon = weaponList[index.nextInt(weaponList.length)];
     personList.add(Person(name, age, eyecolor, height, superpower, health, defense, weapon, null)); 
     personList.add(Person("Computer", age, eyecolor, height, superpower, health, defense, weapon, null)); 
+
+    for(int i = 0; i< personList.length; i++){
+      personList[i].nation = Nation(personList[i], "bob", 3);
+      personList[i].nation.generateArmy();
+      //personList[i].nation.nationInfo();
+     
+    }
+  }
+
 }
+
+class ArmyInfoScreen extends StatefulWidget{
+  @override
+  _ArmyInfoScreenState createState() => _ArmyInfoScreenState();
+}
+
+class _ArmyInfoScreenState  extends State<ArmyInfoScreen>{
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Army Info"),
+      ),
+      body: Column(
+        children:[
+          Text("Player 1: " + personList[0].introduceString()),
+          Text(personList[0].nation.nationInfo()),
+          Text("Player 2: " + personList[1].introduceString()),
+          Text(personList[1].nation.nationInfo()),
+          beginButton(),
+        ],
+      ),
+    );
+
+  }
+
+  Widget beginButton() {
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: FlatButton(
+        child: Text('BEGIN'),
+        color: Colors.purple,
+        textColor: Colors.black,
+        onPressed: (){
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => GamePlayScreen()),
+          );
+        }
+      ),
+    );
+  }
+}
+
+
+
+class GamePlayScreen extends StatefulWidget{
+  @override
+  _GamePlayScreenState createState() => _GamePlayScreenState();
+}
+
+class _GamePlayScreenState extends State<GamePlayScreen>{
+  int playerTurn = 1;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("GamePerson"),
+      ),
+      body: Column(
+        children:[
+          Text("Player $playerTurn: What would you like to do?"),
+          buttonRow(),
+        ],
+      ),
+    );
+
+  }
+   Widget buttonRow(){
+    return Container(
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          attackButton(),
+          eatButton(),
+          passButton(),
+        ],
+      )
+    );
+  } 
+
+
+
+  Widget attackButton() {
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: FlatButton(
+        child: Text('Attack'),
+        color: Colors.blue,
+        textColor: Colors.black,
+        onPressed: (){
+         setState(() {
+          if(playerTurn == 1){
+            playerTurn = 2;
+          }
+          else{
+            playerTurn = 1;
+          }  
+         });
+        }
+      ),
+    );
+  }
+
+  Widget eatButton() {
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: FlatButton(
+        child: Text('Eat'),
+        color: Colors.purple,
+        textColor: Colors.black,
+        onPressed: (){
+         //stuff
+        }
+      ),
+    );
+  }
+
+  Widget passButton() {
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: FlatButton(
+        child: Text('Pass'),
+        color: Colors.purple,
+        textColor: Colors.black,
+        onPressed: (){
+         //stuff
+        }
+      ),
+    );
+  }
+
+}
+
+
 
 
 
@@ -309,6 +451,14 @@ class Person {
     this.printHelper("Hi my name is " + name + ".  I am " + age.toString() + ".  I have " + eyecolor + " eyes!  I have " + hands.toString() + " hands! I am " + height.toString() + " feet tall and my superpower is " + superpower + ". My health is " + health.toString() + " and my defense is " + defense.toString()); 
    
     }
+  }
+  String introduceString() { 
+    if (isAlive() == true){
+    
+      return("Hi my name is " + name + ".  I am " + age.toString() + ".  I have " + eyecolor + " eyes!  I have " + hands.toString() + " hands! I am " + height.toString() + " feet tall and my superpower is " + superpower + ". My health is " + health.toString() + " and my defense is " + defense.toString() + "."); 
+   
+    }
+    return("");
   }
   
   bool checkFruit(food){
@@ -588,18 +738,25 @@ class Nation {
    }
   }
 
-  void nationInfo(){
-    print("Leader name: " + leader.name);
-    print("Army size: $armySize");
-    print("Superhero: " + superhero.name);
+  String nationInfo(){
+    String info = "";
+    info += "\n";
+    info += ("Leader name: " + leader.name);
+    info += "\n";
+    info += ("Army size: $armySize");
+    info += "\n";
+    info += ("Superhero: " + superhero.name);
+    info += "\n";
     
     int nationHealth = 0;
     armyList.forEach((v)=> nationHealth = nationHealth + v.health);
-    print("Toal Nation Health: $nationHealth");
+    info += ("Toal Nation Health: $nationHealth");
+    info += "\n";
     
     int nationDefense = 0;
     armyList.forEach((v)=> nationDefense = nationDefense + v.defense);
-    print("Total Nation Defense: $nationDefense");
+    info += ("Total Nation Defense: $nationDefense");
+    info += "\n";
 
     //finds the number of weapons for each weapon
     for (Person p in armyList){
@@ -621,8 +778,12 @@ class Nation {
     }
     int nationPower = 0;
     numberOfWeaponsMap.forEach((k,v)=> nationPower = nationPower + v*(Person.weaponPower[k]));
-    print("Total Nation Power: $nationPower");
-    print("Weapons are: $numberOfWeaponsMap");
+    info += ("Total Nation Power: $nationPower");
+    info += "\n";
+    info += ("Weapons are: $numberOfWeaponsMap");
+    info += "\n";
+
+    return(info);
   }
   void armyHealth(){
     //number of army members, army name: health
@@ -632,7 +793,7 @@ class Nation {
 
   void feedArmy(){
     this.armyList.forEach((p)=> p.eat("apple"));
-    this.nationInfo();
+    //this.nationInfo();
   }
   void nationAttack(Nation opponentNation, int numberOfTimes){
     bool win = false;
