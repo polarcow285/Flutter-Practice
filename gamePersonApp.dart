@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:math';
 List <Person> personList = new List();
+int numberOfPlayers;
 
 void main() {
   runApp(MyApp());
@@ -118,6 +119,7 @@ class _MyAppState extends State<MyCustomApp> {
         color: Colors.yellow,
         textColor: Colors.blue,
         onPressed:(){
+          numberOfPlayers = number;
           Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => PlayerNamesScreen()),
@@ -175,11 +177,14 @@ class _PlayerNamesScreenState extends State<PlayerNamesScreen> {
               textColor: Colors.blue,
               onPressed:(){
                 setState(() {
-                  onePlayerGame(myController.text);
-                  Navigator.push(
+                  if (numberOfPlayers == 1){
+                    onePlayerGame(myController.text);
+                    Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => ArmyInfoScreen()),
                     );
+                  }
+                  
                 });
               }
             ) 
@@ -215,6 +220,8 @@ void onePlayerGame(String playerName){
     for(String w in Person.weaponPower.keys){
       weaponList.add(w);
     }
+
+    personList.clear();
     String weapon = weaponList[index.nextInt(weaponList.length)];
     personList.add(Person(name, age, eyecolor, height, superpower, health, defense, weapon, null)); 
     personList.add(Person("Computer", age, eyecolor, height, superpower, health, defense, weapon, null)); 
@@ -281,6 +288,8 @@ class GamePlayScreen extends StatefulWidget{
 
 class _GamePlayScreenState extends State<GamePlayScreen>{
   int playerTurn = 1;
+  bool gameOver = false;
+  String status = "";
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -291,6 +300,7 @@ class _GamePlayScreenState extends State<GamePlayScreen>{
         children:[
           Text("Player $playerTurn: What would you like to do?"),
           buttonRow(),
+          Text(status),
         ],
       ),
     );
@@ -320,12 +330,34 @@ class _GamePlayScreenState extends State<GamePlayScreen>{
         textColor: Colors.black,
         onPressed: (){
          setState(() {
-          if(playerTurn == 1){
-            playerTurn = 2;
+          if (gameOver == true){
+            status = "GAME OVER. Return to beginning.";
+            return;
           }
-          else{
-            playerTurn = 1;
-          }  
+
+          status = "";
+           
+          if(playerTurn == 1){
+            personList[playerTurn-1].nation.nationAttack(personList[playerTurn].nation, 10);
+            
+          }
+          else{//playerTurn = 2
+            personList[playerTurn-1].nation.nationAttack(personList[playerTurn-2].nation, 10);
+
+          }
+          personList.forEach((p) => status += p.nation.armyHealthString() + "\n");
+          
+          if(personList[0].nation.armyList.length == 0){
+          status += ("\n" + personList[1].nation.leader.name + "'s army is victorious!!");
+          gameOver = true;
+          }
+          if(personList[1].nation.armyList.length == 0){
+          status += ("\n" + personList[0].nation.leader.name + "'s army is victorious!!");
+          gameOver = true;
+          }
+          
+          playerTurn++;
+          if (playerTurn > personList.length)playerTurn = 1;
          });
         }
       ),
@@ -340,7 +372,14 @@ class _GamePlayScreenState extends State<GamePlayScreen>{
         color: Colors.purple,
         textColor: Colors.black,
         onPressed: (){
-         //stuff
+          setState(() {
+            status = "";
+            personList[playerTurn-1].nation.feedArmy();
+            status += personList[playerTurn-1].nation.nationInfo();
+
+            playerTurn++;
+            if (playerTurn > personList.length)playerTurn = 1;
+          });
         }
       ),
     );
@@ -354,7 +393,12 @@ class _GamePlayScreenState extends State<GamePlayScreen>{
         color: Colors.purple,
         textColor: Colors.black,
         onPressed: (){
-         //stuff
+         setState(() {
+            status = "";
+            status += "Player $playerTurn passed.";
+            playerTurn++;
+            if (playerTurn > personList.length)playerTurn = 1;
+          });
         }
       ),
     );
@@ -790,6 +834,27 @@ class Nation {
     print("Size of " + this.leader.name + "'s army: " + this.armyList.length.toString());
     this.armyList.forEach((v) => print(v.name + ": " + v.health.toString()));
   }
+
+  String armyHealthString(){
+    //number of army members, army name: health
+    String armyHealth = "";
+    armyHealth += "Size of " + this.leader.name + "'s army: " + this.armyList.length.toString();
+    armyHealth += "\n";
+    this.armyList.forEach((v) => (armyHealth+= v.name + ": " + v.health.toString() + "\n"));
+    
+    int nationHealth = 0;
+    armyList.forEach((v)=> nationHealth = nationHealth + v.health);
+    armyHealth += ("Toal Nation Health: $nationHealth");
+    armyHealth += "\n";
+    
+    int nationDefense = 0;
+    armyList.forEach((v)=> nationDefense = nationDefense + v.defense);
+    armyHealth += ("Total Nation Defense: $nationDefense");
+    armyHealth += "\n";
+    
+    return armyHealth;
+  }
+
 
   void feedArmy(){
     this.armyList.forEach((p)=> p.eat("apple"));
