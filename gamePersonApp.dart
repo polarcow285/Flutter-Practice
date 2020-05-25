@@ -23,7 +23,7 @@ class MyCustomApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyCustomApp> {
-  int number = 0;
+  int number = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +104,7 @@ class _MyAppState extends State<MyCustomApp> {
   
   void decrement(){
     setState(() {
-      if(number > 0){
+      if(number > 1){
         number = number - 1;
       }
       
@@ -144,31 +144,34 @@ class PlayerNamesScreen extends StatefulWidget {
 
 
 class _PlayerNamesScreenState extends State<PlayerNamesScreen> {
-  final myController = TextEditingController();
+  //final myController = TextEditingController();
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
-    myController.dispose();
+    _controllers.forEach((c) => c.dispose());
     super.dispose();
   }
-  int integer = 3;
-  String stuff = "";
   @override
- 
+  
+  List<Widget> _children = [];
+  List<TextEditingController> _controllers = [];
+  bool pressed = false;
+  
+
+
+  @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       appBar: AppBar(
         title: Text("Enter Player Names"),
+        actions: <Widget>[IconButton(icon: Icon(Icons.add), onPressed: _add)],
       ),
       body: Column(
-        children: [
-          Text("Player 1:"),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: myController,
-            ),
-            ),
+        children:[
+          Expanded(
+            child: ListView(children: _children), 
+          ),
           Container(
             margin: EdgeInsets.all(5),
             child: FlatButton(
@@ -177,13 +180,15 @@ class _PlayerNamesScreenState extends State<PlayerNamesScreen> {
               textColor: Colors.blue,
               onPressed:(){
                 setState(() {
-                  if (numberOfPlayers == 1){
-                    onePlayerGame(myController.text);
-                    Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ArmyInfoScreen()),
-                    );
+                  List<String> controllerText = [];
+                  for (TextEditingController c in _controllers){
+                    controllerText.add(c.text);
                   }
+                  allPlayerGame(controllerText);
+                  Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ArmyInfoScreen()),
+                  );
                   
                 });
               }
@@ -200,38 +205,63 @@ class _PlayerNamesScreenState extends State<PlayerNamesScreen> {
               },
             )
           )
-        ],
-      ),
+        ]
+      ,)
+     
+         
+      
     );
   }
 
-void onePlayerGame(String playerName){
+  void _add() {
     
-    String name = playerName;
-    Random index = new Random();
-    int age = index.nextInt(100)+1;
-    String eyecolor = Nation.colorList[index.nextInt(Nation.colorList.length)];
-    int height = index.nextInt(7)+1;
-    String superpower = Nation.superpowerList[index.nextInt(Nation.superpowerList.length)]; 
-    int health = 10;
-    int defense = index.nextInt(11);
+    if (pressed == false){
+      for (int i = 0; i < numberOfPlayers; i++){
+        _controllers.add(new TextEditingController());
+        setState(() {
+          _children = List.from(_children)
+          ..add(TextFormField(
+          decoration: InputDecoration(hintText: "Player ${i+1}'s name"),
+          controller: _controllers[i],
+          ));
+        });
+      } 
+    }
+    pressed = true;
+      
+
+  }
   
+  void allPlayerGame(List <String> playerNamesList){
+    
+    personList.clear();
+
+    //Creates a list of weapon names 
     List<String> weaponList = new List();
     for(String w in Person.weaponPower.keys){
       weaponList.add(w);
     }
-
-    personList.clear();
-    String weapon = weaponList[index.nextInt(weaponList.length)];
-    personList.add(Person(name, age, eyecolor, height, superpower, health, defense, weapon, null)); 
-    personList.add(Person("Computer", age, eyecolor, height, superpower, health, defense, weapon, null)); 
-
-    for(int i = 0; i< personList.length; i++){
-      personList[i].nation = Nation(personList[i], "bob", 3);
-      personList[i].nation.generateArmy();
-      //personList[i].nation.nationInfo();
-     
+    if (numberOfPlayers == 1){
+      playerNamesList.add("Computer");
     }
+    for(int n = 0; n < playerNamesList.length; n++){
+      String name = playerNamesList[n];
+      Random index = new Random();
+      int age = index.nextInt(100)+1;
+      String eyecolor = Nation.colorList[index.nextInt(Nation.colorList.length)];
+      int height = index.nextInt(7)+1;
+      String superpower = Nation.superpowerList[index.nextInt(Nation.superpowerList.length)]; 
+      int health = 10;
+      int defense = index.nextInt(11);
+      String weapon = weaponList[index.nextInt(weaponList.length)];
+      //generate a person for every player
+      personList.add(Person(name, age, eyecolor, height, superpower, health, defense, weapon, null));
+      
+      //generates a nation for every person
+      personList[n].nation = Nation(personList[n], "bob", 3);
+      personList[n].nation.generateArmy();
+    }  
+    
   }
 
 }
@@ -248,15 +278,13 @@ class _ArmyInfoScreenState  extends State<ArmyInfoScreen>{
       appBar: AppBar(
         title: Text("Army Info"),
       ),
-      body: Column(
+      body: ListView(
         children:[
-          Text("Player 1: " + personList[0].introduceString()),
-          Text(personList[0].nation.nationInfo()),
-          Text("Player 2: " + personList[1].introduceString()),
-          Text(personList[1].nation.nationInfo()),
+          displayArmyInfo(),
           beginButton(),
         ],
       ),
+      
     );
 
   }
@@ -275,6 +303,20 @@ class _ArmyInfoScreenState  extends State<ArmyInfoScreen>{
           );
         }
       ),
+    );
+  }
+  Widget displayArmyInfo(){
+    String armyInfoString = "";
+    
+    for (int p = 0; p < personList.length; p++){
+      armyInfoString += ("Player ${p + 1}: " + personList[p].introduceString());
+      armyInfoString += "\n";
+      armyInfoString += (personList[p].nation.nationInfo());
+      armyInfoString += "\n";
+    }
+    return Container(
+      margin: EdgeInsets.all(20),
+      child: Text(armyInfoString)
     );
   }
 }
@@ -1040,3 +1082,4 @@ class Nation {
   
   
 }*/
+
